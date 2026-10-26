@@ -1,0 +1,251 @@
+﻿
+======================================================================
+SPRINT 1 - IMPORTAÇÃO DOS DADOS
+======================================================================
+CSV não encontrado, extraindo do arquivo zip...
+Colunas encontradas no cabeçalho: ['DATA', 'CO_ID', 'CL_ID', 'CL_GENERO', 'CL_EC', 'CL_FHL', 'CL_SEG', 'PR_ID', 'PR_CAT', 'PR_NOME', '', '', '', '']
+Primeira linha lida pelo DictReader: {'DATA': '01/02/2019', 'CO_ID': '1000', 'CL_ID': '534', 'CL_GENERO': 'M', 'CL_EC': '4', 'CL_FHL': '1', 'CL_SEG': 'C', 'PR_ID': '67', 'PR_CAT': 'BEBIDAS', 'PR_NOME': 'REFRIGERANTE GUARANA', '': ''}
+
+Número de registros: 830000
+Número de colunas: 14
+
+Tipos de dados (tudo veio como texto, porque o csv lê tudo como string):
+DATA         str
+CO_ID        str
+CL_ID        str
+CL_GENERO    str
+CL_EC        str
+CL_FHL       str
+CL_SEG       str
+PR_ID        str
+PR_CAT       str
+PR_NOME      str
+             str
+             str
+             str
+             str
+dtype: object
+
+Primeiras linhas:
+         DATA CO_ID CL_ID CL_GENERO CL_EC CL_FHL CL_SEG PR_ID     PR_CAT               PR_NOME        
+0  01/02/2019  1000   534         M     4      1      C    67    BEBIDAS  REFRIGERANTE GUARANA        
+1  01/02/2019  1000   534         M     4      1      C    70    BEBIDAS   REFRIGERANTE OUTROS        
+2  01/02/2019  1000   534         M     4      1      C   178    HIGIENE       LENCO UMEDECIDO        
+3  01/02/2019  1000   534         M     4      1      C     4  ALIMENTOS               ABACAXI        
+4  01/02/2019  1000   534         M     4      1      C   175    LIMPEZA     LIMPADOR MULTIUSO        
+
+======================================================================
+VERIFICAÇÃO DE PROBLEMAS NA BASE
+======================================================================
+1) Colunas sem nome no cabeçalho: 4
+
+2) Valores nulos por coluna:
+DATA              0
+CO_ID             0
+CL_ID             0
+CL_GENERO         0
+CL_EC             0
+CL_FHL            0
+CL_SEG            0
+PR_ID             0
+PR_CAT            0
+PR_NOME           0
+             830000
+             830000
+             830000
+             830000
+dtype: int64
+
+3) Categorias de produto encontradas:
+PR_CAT
+ALIMENTOS     434767
+HIGIENE       155574
+LIMPEZA       145754
+BEBIDAS        43299
+PET            32399
+ACESSORIOS     14557
+#N/D            3650
+Name: count, dtype: int64
+Linhas com categoria "#N/D": 3650
+
+4) Linhas duplicadas: 96553
+
+5) Nomes de produto com letra minúscula (erro de acento): ['REFRIGERANTE LIMaO']
+
+======================================================================
+SPRINT 2 - TRANSFORMAÇÃO DE TIPOS
+======================================================================
+Colunas depois de remover as vazias: ['DATA', 'CO_ID', 'CL_ID', 'CL_GENERO', 'CL_EC', 'CL_FHL', 'CL_SEG', 'PR_ID', 'PR_CAT', 'PR_NOME']
+
+Tipos de dados depois da conversão:
+DATA         datetime64[us]
+CO_ID                 Int64
+CL_ID                 Int64
+CL_GENERO               str
+CL_EC                 Int64
+CL_FHL                Int64
+CL_SEG                  str
+PR_ID                 Int64
+PR_CAT                  str
+PR_NOME                 str
+dtype: object
+Exemplo de nome corrigido: <StringArray>
+['REFRIGERANTE LIMAO', 'LIMAO']
+Length: 2, dtype: str
+Exemplo de float com vírgula -> limpar_decimal('12,50') = 12.5
+
+======================================================================
+SPRINT 3 - LIMPEZA DE NULOS E DUPLICATAS
+======================================================================
+Linhas com "Sem Categoria": 3650
+CL_FHL: nenhum nulo encontrado, não precisou imputar
+CL_EC: nenhum nulo encontrado, não precisou imputar
+Linhas removidas por falta de DATA ou ID: 0
+
+Nulos por coluna depois do tratamento:
+DATA         0
+CO_ID        0
+CL_ID        0
+CL_GENERO    0
+CL_EC        0
+CL_FHL       0
+CL_SEG       0
+PR_ID        0
+PR_CAT       0
+PR_NOME      0
+dtype: int64
+
+Duplicatas removidas: 96553 (o volume ficou guardado na coluna QTD)
+Registros depois da limpeza: 733447
+
+======================================================================
+REGRAS DE NEGÓCIO (CO_ID e DATA)
+======================================================================
+OK: todas as compras têm um único cliente e uma única data.
+Clientes com cadastro inconsistente: 0
+Data mais antiga: 2019-01-04
+Data mais recente: 2022-12-08
+Datas no futuro: 0
+
+Total de compras (CO_ID únicos): 18471
+Total de clientes (CL_ID únicos): 1000
+Total de produtos (PR_ID únicos): 229
+
+======================================================================
+SPRINT 4 - ESTATÍSTICA DESCRITIVA: NÚMERO DE FILHOS
+======================================================================
+Estatísticas por cliente (1 linha por cliente):
+  Contagem       : 1000.00
+  Média          : 1.14
+  Mediana        : 0.00
+  Moda           : 0.00
+  Desvio padrão  : 1.41
+  Mínimo         : 0.00
+  Q1 (25%)       : 0.00
+  Q2 (50%)       : 0.00
+  Q3 (75%)       : 2.00
+  Máximo         : 4.00
+
+Distribuição de clientes por número de filhos:
+CL_FHL
+0    527
+1    125
+2    130
+3    121
+4     97
+Name: count, dtype: Int64
+
+Comparação - describe() considerando todas as linhas de itens:
+count    733447.000000
+mean          1.146049
+std           1.416917
+min           0.000000
+25%           0.000000
+50%           0.000000
+75%           2.000000
+max           4.000000
+Name: CL_FHL, dtype: float64
+
+======================================================================
+PADRÕES DE AGRUPAMENTO
+======================================================================
+1) Vendas por gênero:
+            itens  compras  clientes  itens_por_compra
+CL_GENERO                                             
+F          432576     9615       519              45.0
+M          397424     8856       481              44.9
+
+2) Itens vendidos por categoria e gênero:
+CL_GENERO           F       M   TOTAL
+PR_CAT                               
+TOTAL          432576  397424  830000
+ALIMENTOS      226575  208192  434767
+HIGIENE         80991   74583  155574
+LIMPEZA         76298   69456  145754
+BEBIDAS         22345   20954   43299
+PET             16749   15650   32399
+ACESSORIOS       7700    6857   14557
+Sem Categoria    1918    1732    3650
+
+3) Compras por segmento:
+        clientes  compras   itens  compras_por_cliente
+CL_SEG                                                
+A             84     1492   67736                 17.8
+B            645    11843  530163                 18.4
+C            271     5136  232101                 19.0
+
+4) Itens por compra conforme o número de filhos:
+        compras   itens  itens_por_compra
+CL_FHL                                   
+0          9735  435501              44.7
+1          2250  102813              45.7
+2          2394  106622              44.5
+3          2289  104685              45.7
+4          1803   80379              44.6
+
+5) Compras por ano:
+      compras   itens
+ANO                  
+2019     4483  199036
+2020     4794  218367
+2021     5505  245259
+2022     3689  167338
+
+6) Top 10 produtos mais vendidos:
+PR_NOME
+PRESUNTO COZIDO       14381
+SARDINHA               7490
+GEL                    7399
+BANANA                 7385
+DESENGORDURANTE        7378
+MODELADOR              7363
+BIFE DE COXAO MOLE     7355
+REMOVEDOR              7350
+ESCOVA DE DENTE        7346
+PAPINHA INFANTIL       7346
+Name: QTD, dtype: Int64
+
+======================================================================
+SPRINT 5 - RELATÓRIO FINAL
+======================================================================
+Registros originais ............: 830000
+Registros após limpeza .........: 733447
+Duplicatas removidas ...........: 96553
+Linhas "Sem Categoria" .........: 3650
+Compras / clientes / produtos ..: 18471 / 1000 / 229
+Gênero que mais comprou ........: F
+Categoria mais vendida .........: ALIMENTOS
+Segmento com mais compras ......: B
+Ano com mais compras ...........: 2021
+Média de filhos por cliente ....: 1.14 (moda = 0)
+
+CONCLUSÕES:
+- O gênero F concentra a maior parte dos itens vendidos, mas a média de itens por compra é parecida entre os gêneros.
+- ALIMENTOS é de longe a categoria mais vendida; BEBIDAS, PET e ACESSORIOS têm pouca participação.
+- O segmento B faz a maioria das compras; o segmento A é o menor.
+- Mais da metade dos clientes não tem filhos (moda e mediana = 0), e ter filhos quase não muda o tamanho da cesta (~45 itens por compra).
+- 2021 foi o ano com mais compras; 2022 caiu, mas a base termina em 08/12/2022, então o ano está incompleto.
+- Problemas que continuam: não existe coluna de valor (R$) nem de quantidade original,
+  e as linhas 'Sem Categoria' (produto 107) não têm como ser recuperadas sem outra fonte.
+
+Base limpa salva em: data\df_limpo.csv.gz
